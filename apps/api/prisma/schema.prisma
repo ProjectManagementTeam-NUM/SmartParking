@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SlotState {
+  FREE
+  OCCUPIED
+  UNKNOWN
+}
+
+enum SlotSource {
+  LIVE
+  SIMULATED
+}
+
+enum GatePosition {
+  OPEN
+  CLOSED
+}
+
+enum GateDecision {
+  OPENED
+  DENIED
+}
+
+model Parking {
+  id      String   @id
+  name    String
+  address String
+  lat     Float
+  lng     Float
+  slots   Slot[]
+  devices Device[]
+  gate    Gate?
+}
+
+model Slot {
+  id        String     @id
+  parkingId String
+  parking   Parking    @relation(fields: [parkingId], references: [id], onDelete: Cascade)
+  label     String
+  state     SlotState  @default(UNKNOWN)
+  source    SlotSource
+  deviceId  String?
+  device    Device?    @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  updatedAt DateTime   @updatedAt
+
+  @@index([parkingId])
+}
+
+model Device {
+  id              String    @id
+  parkingId       String?
+  parking         Parking?  @relation(fields: [parkingId], references: [id], onDelete: SetNull)
+  apiKeyHash      String
+  lastSeenAt      DateTime?
+  firmwareVersion String?
+  slots           Slot[]
+}
+
+model Gate {
+  parkingId      String        @id
+  parking        Parking       @relation(fields: [parkingId], references: [id], onDelete: Cascade)
+  position       GatePosition  @default(CLOSED)
+  lastDecision   GateDecision?
+  lastDecisionAt DateTime?
+}
+
+model Event {
+  id        String   @id @default(cuid())
+  type      String
+  parkingId String?
+  slotId    String?
+  deviceId  String?
+  payload   Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model PilotRequest {
+  id           String   @id @default(cuid())
+  name         String
+  organization String
+  email        String
+  phone        String?
+  siteCount    Int?
+  message      String?
+  createdAt    DateTime @default(now())
+}
