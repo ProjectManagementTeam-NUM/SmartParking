@@ -1,0 +1,10 @@
+node_modules/
+dist/
+dev-dist/
+coverage/
+.env
+*.log
+.DS_Store
+firmware/.pio/
+firmware/include/config.h
+.superpowers/
