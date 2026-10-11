@@ -2,7 +2,7 @@ export const mn = {
   app: {
     driverTitle: "Сул зогсоол хайх",
     dashboardTitle: "Операторын самбар",
-    partnersTitle: "Ухаалаг зогсоол",
+    landingTitle: "Ухаалаг зогсоол",
   },
   common: {
     loading: "Ачаалж байна…",
@@ -23,7 +23,7 @@ export const mn = {
   dashboard: {
     sites: "Зогсоолууд",
   },
-  partners: {
+  landing: {
     heroTitle: "Зогсоолоо ухаалаг болгоё",
     heroBody: "Сул зогсоолын мэдээллийг жолооч нарт бодит цагаар хүргэнэ.",
     cta: "Pilot хүсэлт илгээх",

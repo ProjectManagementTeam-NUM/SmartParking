@@ -51,7 +51,7 @@ smart-parking/
 │   │   └── test/
 │   ├── driver/               # Role 5 — Vite + React + TS PWA
 │   ├── dashboard/            # Role 6 — Vite + React + TS
-│   └── partners/             # Role 6 — Vite + React + TS
+│   └── landing/              # Role 6 — Vite + React + TS
 ├── packages/
 │   ├── shared/               # Zod schemas + TS types + pure helpers (suggested slot)
 │   ├── api-client/           # typed REST client + Socket.IO client + TanStack Query hooks
@@ -217,7 +217,7 @@ When a client reconnects it refetches everything through TanStack Query; missed 
 - Pilot requests table.
 - Operator token entered once, stored in localStorage.
 
-### Business / Partner site — `apps/partners`
+### Business / Landing site — `apps/landing`
 
 Single landing page: Problem → Solution (3-step how it works) → **Live proof** (read-only A/B availability widget from the API) → Pilot package → Benefits/ROI → **Request a Pilot** form (POST `/pilot-requests`, with success and error states).
 
@@ -290,7 +290,7 @@ Firmware reads the server host and port from a config header, so switching betwe
 | W2   | Hardware proof (roles 2/3); simulator posting to a stub `/ingest`                |
 | W3   | API + realtime complete; staging host decided                                    |
 | W4   | Driver PWA                                                                       |
-| W5   | Dashboard + Partner site; Docker build of full stack                             |
+| W5   | Dashboard + Landing site; Docker build of full stack                             |
 | W6   | Integration: real ESP32 A + B + simulator against one API                        |
 | W7   | System test (E2E + hardware checklist), pitch                                    |
 | W8   | Freeze, demo-laptop rehearsal of the 2-car scenario                              |

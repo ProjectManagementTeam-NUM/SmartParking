@@ -33,7 +33,7 @@ function renderApp(getParkings: ApiClient["getParkings"]) {
   );
 }
 
-describe("Partners App", () => {
+describe("Landing App", () => {
   it("shows the hero, the pilot CTA and live proof", async () => {
     renderApp(vi.fn().mockResolvedValue(parkings));
     expect(

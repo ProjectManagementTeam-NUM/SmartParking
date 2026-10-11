@@ -5,7 +5,7 @@ export const en: typeof mn = {
   app: {
     driverTitle: "Find free parking",
     dashboardTitle: "Operator dashboard",
-    partnersTitle: "Smart Parking",
+    landingTitle: "Smart Parking",
   },
   common: {
     loading: "Loading…",
@@ -26,7 +26,7 @@ export const en: typeof mn = {
   dashboard: {
     sites: "Sites",
   },
-  partners: {
+  landing: {
     heroTitle: "Make your parking smart",
     heroBody: "Deliver real-time free-space information to drivers.",
     cta: "Request a pilot",

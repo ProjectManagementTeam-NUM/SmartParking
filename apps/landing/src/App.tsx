@@ -9,24 +9,24 @@ export function App() {
   return (
     <div className="min-h-screen bg-white text-slate-900">
       <nav className="flex items-center justify-between px-6 py-4">
-        <span className="font-bold text-brand">{t("app.partnersTitle")}</span>
+        <span className="font-bold text-brand">{t("app.landingTitle")}</span>
         <div className="text-brand">
           <LanguageToggle />
         </div>
       </nav>
       <section className="mx-auto max-w-3xl px-6 py-16 text-center">
-        <h1 className="text-4xl font-bold tracking-tight">{t("partners.heroTitle")}</h1>
-        <p className="mt-4 text-lg text-slate-600">{t("partners.heroBody")}</p>
+        <h1 className="text-4xl font-bold tracking-tight">{t("landing.heroTitle")}</h1>
+        <p className="mt-4 text-lg text-slate-600">{t("landing.heroBody")}</p>
         <a
           href="#pilot"
           className="mt-8 inline-block rounded-lg bg-brand px-6 py-3 font-semibold text-white"
         >
-          {t("partners.cta")}
+          {t("landing.cta")}
         </a>
       </section>
       <section className="mx-auto max-w-3xl px-6 pb-16">
         <h2 className="mb-3 text-sm font-semibold tracking-wide text-slate-500 uppercase">
-          {t("partners.liveTitle")}
+          {t("landing.liveTitle")}
         </h2>
         {parkings.isError && (
           <p role="alert" className="rounded-lg bg-occupied/10 p-3 text-occupied">

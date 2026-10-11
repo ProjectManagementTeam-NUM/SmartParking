@@ -24,7 +24,7 @@ npm run dev          # API + 3 web apps
 | API                | http://localhost:3000/api/parkings | Role 4 |
 | Driver PWA         | http://localhost:5173              | Role 5 |
 | Operator dashboard | http://localhost:5174              | Role 6 |
-| Partner site       | http://localhost:5175              | Role 6 |
+| Landing site       | http://localhost:5175              | Role 6 |
 
 `npm run sim -- status` prints current availability from the API.
 
@@ -35,7 +35,7 @@ npm run dev          # API + 3 web apps
 | `apps/api`            | Express + Socket.IO + Prisma (PostgreSQL)             | Role 4    |
 | `apps/driver`         | Driver PWA (Vite + React)                             | Role 5    |
 | `apps/dashboard`      | Operator dashboard                                    | Role 6    |
-| `apps/partners`       | Business / partner site                               | Role 6    |
+| `apps/landing`        | Business / landing page (for partners)                | Role 6    |
 | `packages/shared`     | Zod schemas, types, availability rules (the contract) | all       |
 | `packages/api-client` | Typed REST + realtime client, React hooks             | Roles 5/6 |
 | `packages/ui`         | Shared components + theme                             | Roles 5/6 |
