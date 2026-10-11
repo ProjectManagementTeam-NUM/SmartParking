@@ -4,7 +4,11 @@ import { useTranslation } from "react-i18next";
 export function LanguageToggle() {
   const { t, i18n } = useTranslation();
   return (
-    <div role="group" aria-label={t("language.label")} className="inline-flex rounded-lg bg-white/15 p-0.5">
+    <div
+      role="group"
+      aria-label={t("language.label")}
+      className="inline-flex rounded-lg bg-white/15 p-0.5"
+    >
       {SUPPORTED_LANGUAGES.map((lng) => {
         const active = i18n.language === lng;
         return (

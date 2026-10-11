@@ -2,11 +2,21 @@
   "name": "smart-parking",
   "private": true,
   "type": "module",
-  "workspaces": ["apps/*", "packages/*", "tools/*"],
-  "engines": { "node": ">=22" },
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "tools/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
+    "dev": "concurrently -k -n api,driver,dashboard,partners -c blue,green,magenta,yellow \"npm run dev -w @smart-parking/api\" \"npm run dev -w @smart-parking/driver\" \"npm run dev -w @smart-parking/dashboard\" \"npm run dev -w @smart-parking/partners\"",
     "db:up": "docker compose -f docker-compose.dev.yml up -d --wait",
     "db:down": "docker compose -f docker-compose.dev.yml down",
+    "db:migrate": "npm run db:migrate -w @smart-parking/api",
+    "db:seed": "npm run db:seed -w @smart-parking/api",
+    "sim": "npm run sim -w @smart-parking/simulator --",
     "lint": "eslint .",
     "format": "prettier --write .",
     "typecheck": "npm run typecheck --workspaces --if-present",

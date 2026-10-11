@@ -9,8 +9,26 @@ import { describe, expect, it, vi } from "vitest";
 import { App } from "./App";
 
 const parkings: ParkingSummary[] = [
-  { id: "A", name: "Parking A", address: "x", lat: 0, lng: 0, freeCount: 4, totalCount: 6, status: "AVAILABLE" },
-  { id: "B", name: "Parking B", address: "y", lat: 0, lng: 0, freeCount: 0, totalCount: 6, status: "FULL" },
+  {
+    id: "A",
+    name: "Parking A",
+    address: "x",
+    lat: 0,
+    lng: 0,
+    freeCount: 4,
+    totalCount: 6,
+    status: "AVAILABLE",
+  },
+  {
+    id: "B",
+    name: "Parking B",
+    address: "y",
+    lat: 0,
+    lng: 0,
+    freeCount: 0,
+    totalCount: 6,
+    status: "FULL",
+  },
 ];
 
 function renderApp(getParkings: ApiClient["getParkings"]) {

@@ -29,9 +29,15 @@ describe("GET /api/parkings", () => {
   });
 
   it("reports FULL when every slot is occupied or unknown", async () => {
-    await prisma.slot.updateMany({ where: { parkingId: "B", source: "SIMULATED" }, data: { state: "OCCUPIED" } });
+    await prisma.slot.updateMany({
+      where: { parkingId: "B", source: "SIMULATED" },
+      data: { state: "OCCUPIED" },
+    });
     const res = await request(createApp({ prisma })).get("/api/parkings").expect(200);
-    const b = z.array(ParkingSummary).parse(res.body).find((p) => p.id === "B");
+    const b = z
+      .array(ParkingSummary)
+      .parse(res.body)
+      .find((p) => p.id === "B");
     expect(b).toMatchObject({ freeCount: 0, status: "FULL" });
   });
 });
@@ -41,7 +47,11 @@ describe("GET /api/parkings/:id", () => {
     const res = await request(createApp({ prisma })).get("/api/parkings/B").expect(200);
     const detail = ParkingDetail.parse(res.body);
     expect(detail.slots.map((s) => s.id)).toEqual(["B1", "B2", "B3", "B4", "B5", "B6"]);
-    expect(detail.slots[0]).toMatchObject({ source: "LIVE", state: "UNKNOWN", deviceId: "esp32-b" });
+    expect(detail.slots[0]).toMatchObject({
+      source: "LIVE",
+      state: "UNKNOWN",
+      deviceId: "esp32-b",
+    });
     expect(detail.gate).toMatchObject({ parkingId: "B", position: "CLOSED", lastDecision: null });
   });
 

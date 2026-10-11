@@ -23,7 +23,9 @@ export function App() {
           </p>
         )}
         <div className="grid gap-4 sm:grid-cols-2">
-          {parkings.data?.map((parking) => <ParkingCard key={parking.id} parking={parking} />)}
+          {parkings.data?.map((parking) => (
+            <ParkingCard key={parking.id} parking={parking} />
+          ))}
         </div>
       </main>
     </div>

@@ -24,6 +24,7 @@
 - Not in this plan (later weeks): `/api/ingest`, `/ws/device`, slot PATCH, devices/events/pilot endpoints, dashboard features, full Docker stack + Caddy, real firmware logic.
 
 Deliberate small deviations from the spec's tree:
+
 - The env example lives at `apps/api/.env.example`, because the API is the only consumer.
 - The i18n dictionaries are TS objects (`mn.ts`, `en.ts`) instead of JSON, so key parity is checked at compile time.
 - The protocol contract test lives in `packages/shared` (the schema owner).
@@ -41,10 +42,12 @@ Deliberate small deviations from the spec's tree:
 ### Task 1: Root workspace, tooling and dev database
 
 **Files:**
+
 - Create: `package.json`, `tsconfig.base.json`, `eslint.config.js`, `.prettierrc`, `.prettierignore`, `.gitignore`, `.nvmrc`
 - Create: `docker-compose.dev.yml`, `infra/postgres/init/01-test-db.sql`
 
 **Interfaces:**
+
 - Produces: root scripts `db:up`, `db:down`, `lint`, `format`, `typecheck`, `test` (`dev`, `db:migrate`, `db:seed`, `sim` are added in Task 14). Dev DB `postgresql://parking:parking@localhost:5433/smart_parking` and test DB `.../smart_parking_test`.
 
 - [ ] **Step 1: Create `package.json`**
@@ -119,7 +122,13 @@ import globals from "globals";
 
 export default tseslint.config(
   {
-    ignores: ["**/dist/**", "**/dev-dist/**", "**/node_modules/**", "**/coverage/**", "firmware/**"],
+    ignores: [
+      "**/dist/**",
+      "**/dev-dist/**",
+      "**/node_modules/**",
+      "**/coverage/**",
+      "firmware/**",
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -228,11 +237,13 @@ git commit -m "Set up npm workspaces, tooling and dev database"
 ### Task 2: `packages/shared` contract and domain rules
 
 **Files:**
+
 - Create: `packages/shared/package.json`, `packages/shared/tsconfig.json`
 - Create: `packages/shared/src/enums.ts`, `src/models.ts`, `src/protocol.ts`, `src/realtime.ts`, `src/availability.ts`, `src/suggest-slot.ts`, `src/index.ts`
 - Test: `packages/shared/test/availability.test.ts`, `test/suggest-slot.test.ts`, `test/schemas.test.ts`
 
 **Interfaces:**
+
 - Produces (all exported from `@smart-parking/shared`; each schema has a same-named inferred type):
   - Enums: `SlotState`, `ReportedSlotState` (`FREE|OCCUPIED`), `SlotSource`, `ParkingStatus`, `GatePosition`, `GateDecision`
   - Models: `Slot`, `Gate`, `ParkingSummary`, `ParkingDetail`, `Device`
@@ -611,11 +622,13 @@ git commit -m "Add shared contract schemas and availability rules"
 ### Task 3: Device protocol, firmware skeleton, hardware and docs folders
 
 **Files:**
+
 - Create: `firmware/PROTOCOL.md`, `firmware/platformio.ini`, `firmware/src/main.cpp`, `firmware/include/config.example.h`, `firmware/README.md`
 - Create: `hardware/README.md`, `hardware/BOM.csv`, `docs/README.md`
 - Test: `packages/shared/test/protocol-contract.test.ts`
 
 **Interfaces:**
+
 - Consumes: `IngestBody`, `DeviceAvailabilityMessage` from Task 2.
 - Produces: `firmware/PROTOCOL.md` with fenced blocks tagged ` ```json ingest ` and ` ```json availability `. The contract test parses every such block.
 
@@ -623,7 +636,7 @@ git commit -m "Add shared contract schemas and availability rules"
 
 `packages/shared/test/protocol-contract.test.ts`:
 
-```ts
+````ts
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -657,7 +670,7 @@ describe("firmware/PROTOCOL.md examples", () => {
     }
   });
 });
-```
+````
 
 - [ ] **Step 2: Run it to verify it fails**
 
@@ -837,13 +850,13 @@ Note: the HC-SR04 ECHO pin outputs 5 V. Use a resistor divider before the ESP32 
 ```markdown
 # Docs (Roles 1 + 7)
 
-| Document | Owner |
-|---|---|
-| `superpowers/specs/`: design specs | all |
-| `superpowers/plans/`: implementation plans | all |
-| `wbs.md`: WBS + schedule | Role 1 |
-| `test-plan.md` / `test-results.md` | Role 7 |
-| `survey.md`, `requirements.md`, `risks.md` | Role 7 |
+| Document                                   | Owner       |
+| ------------------------------------------ | ----------- |
+| `superpowers/specs/`: design specs         | all         |
+| `superpowers/plans/`: implementation plans | all         |
+| `wbs.md`: WBS + schedule                   | Role 1      |
+| `test-plan.md` / `test-results.md`         | Role 7      |
+| `survey.md`, `requirements.md`, `risks.md` | Role 7      |
 | `demo-script.md`: final-day 2-car scenario | Roles 1 + 7 |
 ```
 
@@ -864,11 +877,13 @@ git commit -m "Add device protocol contract, firmware skeleton and hardware docs
 ### Task 4: `packages/i18n` (MN default + EN)
 
 **Files:**
+
 - Create: `packages/i18n/package.json`, `tsconfig.json`, `vitest.config.ts`, `src/test-setup.ts`
 - Create: `packages/i18n/src/locales/mn.ts`, `src/locales/en.ts`, `src/index.ts`
 - Test: `packages/i18n/test/i18n.test.ts`
 
 **Interfaces:**
+
 - Produces: `initI18n(): i18n` (a new i18next instance, already wired to react-i18next), `setLanguage(instance: i18n, lng: Language): Promise<void>`, `SUPPORTED_LANGUAGES = ["mn","en"] as const`, `type Language`, `LANGUAGE_STORAGE_KEY = "sp.lang"`.
 - Translation keys used by later tasks: `app.driverTitle`, `app.dashboardTitle`, `app.partnersTitle`, `common.loading`, `common.error`, `parking.free` (`{{free}}`, `{{total}}`), `parking.status.AVAILABLE`, `parking.status.FULL`, `language.label`, `language.mn`, `language.en`, `dashboard.sites`, `partners.heroTitle`, `partners.heroBody`, `partners.cta`, `partners.liveTitle`.
 
@@ -1133,12 +1148,14 @@ git commit -m "Add MN/EN i18n package"
 ### Task 5: `apps/api` database schema and seed
 
 **Files:**
+
 - Create: `apps/api/package.json`, `apps/api/tsconfig.json`, `apps/api/vitest.config.ts`, `apps/api/.env.example`
 - Create: `apps/api/prisma/schema.prisma`, `apps/api/prisma/seed.ts`, `apps/api/prisma/migrations/**` (generated)
 - Create: `apps/api/src/domain/device-keys.ts`, `apps/api/src/db/seed-data.ts`
 - Test: `apps/api/test/test-db.ts`, `apps/api/test/global-setup.ts`, `apps/api/test/helpers.ts`, `apps/api/test/seed.test.ts`
 
 **Interfaces:**
+
 - Produces:
   - `hashDeviceKey(key: string): string` (sha256 hex)
   - `DEVICE_IDS = ["esp32-a","esp32-b","simulator"] as const`, `type DeviceId`
@@ -1340,8 +1357,7 @@ Expected: `apps/api/prisma/migrations/<timestamp>_init/migration.sql` is created
 
 ```ts
 export const TEST_DATABASE_URL =
-  process.env.TEST_DATABASE_URL ??
-  "postgresql://parking:parking@localhost:5433/smart_parking_test";
+  process.env.TEST_DATABASE_URL ?? "postgresql://parking:parking@localhost:5433/smart_parking_test";
 ```
 
 `apps/api/test/global-setup.ts`:
@@ -1463,7 +1479,13 @@ export const DEVICE_IDS = ["esp32-a", "esp32-b", "simulator"] as const;
 export type DeviceId = (typeof DEVICE_IDS)[number];
 
 const PARKINGS: Prisma.ParkingCreateManyInput[] = [
-  { id: "A", name: "Parking A", address: "Sukhbaatar Square, Ulaanbaatar", lat: 47.9186, lng: 106.9177 },
+  {
+    id: "A",
+    name: "Parking A",
+    address: "Sukhbaatar Square, Ulaanbaatar",
+    lat: 47.9186,
+    lng: 106.9177,
+  },
   { id: "B", name: "Parking B", address: "Peace Avenue, Ulaanbaatar", lat: 47.9135, lng: 106.9156 },
 ];
 
@@ -1504,7 +1526,9 @@ export async function seed(prisma: PrismaClient, keys: Record<DeviceId, string>)
         { id: "simulator", parkingId: null, apiKeyHash: hashDeviceKey(keys.simulator) },
       ],
     }),
-    prisma.slot.createMany({ data: [...slotsFor("A", 2, "esp32-a"), ...slotsFor("B", 1, "esp32-b")] }),
+    prisma.slot.createMany({
+      data: [...slotsFor("A", 2, "esp32-a"), ...slotsFor("B", 1, "esp32-b")],
+    }),
     prisma.gate.createMany({ data: [{ parkingId: "A" }, { parkingId: "B" }] }),
   ]);
 }
@@ -1549,10 +1573,12 @@ git commit -m "Add Prisma schema, migration and demo seed"
 ### Task 6: `apps/api` HTTP app and parking endpoints
 
 **Files:**
+
 - Create: `apps/api/src/domain/serialize.ts`, `apps/api/src/routes/parkings.ts`, `apps/api/src/app.ts`
 - Test: `apps/api/test/parkings.test.ts`
 
 **Interfaces:**
+
 - Consumes: `createTestPrisma`, `computeAvailability`, `ParkingSummary`, `ParkingDetail`.
 - Produces:
   - `createApp(deps: { prisma: PrismaClient }): Express`
@@ -1595,9 +1621,15 @@ describe("GET /api/parkings", () => {
   });
 
   it("reports FULL when every slot is occupied or unknown", async () => {
-    await prisma.slot.updateMany({ where: { parkingId: "B", source: "SIMULATED" }, data: { state: "OCCUPIED" } });
+    await prisma.slot.updateMany({
+      where: { parkingId: "B", source: "SIMULATED" },
+      data: { state: "OCCUPIED" },
+    });
     const res = await request(createApp({ prisma })).get("/api/parkings").expect(200);
-    const b = z.array(ParkingSummary).parse(res.body).find((p) => p.id === "B");
+    const b = z
+      .array(ParkingSummary)
+      .parse(res.body)
+      .find((p) => p.id === "B");
     expect(b).toMatchObject({ freeCount: 0, status: "FULL" });
   });
 });
@@ -1607,7 +1639,11 @@ describe("GET /api/parkings/:id", () => {
     const res = await request(createApp({ prisma })).get("/api/parkings/B").expect(200);
     const detail = ParkingDetail.parse(res.body);
     expect(detail.slots.map((s) => s.id)).toEqual(["B1", "B2", "B3", "B4", "B5", "B6"]);
-    expect(detail.slots[0]).toMatchObject({ source: "LIVE", state: "UNKNOWN", deviceId: "esp32-b" });
+    expect(detail.slots[0]).toMatchObject({
+      source: "LIVE",
+      state: "UNKNOWN",
+      deviceId: "esp32-b",
+    });
     expect(detail.gate).toMatchObject({ parkingId: "B", position: "CLOSED", lastDecision: null });
   });
 
@@ -1781,10 +1817,12 @@ git commit -m "Add parkings API endpoints"
 ### Task 7: `apps/api` realtime bus, Socket.IO and server entry
 
 **Files:**
+
 - Create: `apps/api/src/realtime/bus.ts`, `apps/api/src/realtime/socket.ts`, `apps/api/src/server.ts`
 - Test: `apps/api/test/realtime.test.ts`
 
 **Interfaces:**
+
 - Consumes: `ParkingUpdated`, `SOCKET_EVENTS`, `createApp`.
 - Produces:
   - `createEventBus(): EventBus`, where `EventBus = EventEmitter<DomainEvents>` and `DomainEvents = { "parking.updated": [ParkingUpdated] }`. Later weeks add `slot.updated` etc. here.
@@ -1950,11 +1988,13 @@ git commit -m "Add realtime event bus, Socket.IO adapter and server entry"
 ### Task 8: `packages/api-client` (typed client and React bindings)
 
 **Files:**
+
 - Create: `packages/api-client/package.json`, `tsconfig.json`, `vitest.config.ts`, `src/test-setup.ts`
 - Create: `packages/api-client/src/client.ts`, `src/realtime.ts`, `src/index.ts`, `src/react.tsx`
 - Test: `packages/api-client/test/client.test.ts`, `test/react.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `ParkingSummary`, `ParkingDetail`, `SOCKET_EVENTS` from shared.
 - Produces:
   - `@smart-parking/api-client` (Node-safe, no React): `createApiClient(opts?: { baseUrl?: string; fetchFn?: typeof fetch }): ApiClient`, `interface ApiClient { getParkings(): Promise<ParkingSummary[]>; getParking(id: string): Promise<ParkingDetail> }`, `class ApiError extends Error { status: number }` (status `0` = network error), `createRealtime(url?: string): Socket`, `type RealtimeSocket = Pick<Socket, "on" | "off">`
@@ -2066,7 +2106,9 @@ describe("createApiClient", () => {
 
   it("throws ApiError with the status for an HTML 502 from a proxy", async () => {
     const fetchFn = fetchReturning(new Response("<html>Bad Gateway</html>", { status: 502 }));
-    const error = await createApiClient({ fetchFn }).getParkings().catch((e: unknown) => e);
+    const error = await createApiClient({ fetchFn })
+      .getParkings()
+      .catch((e: unknown) => e);
     expect(error).toBeInstanceOf(ApiError);
     expect((error as ApiError).status).toBe(502);
   });
@@ -2078,12 +2120,16 @@ describe("createApiClient", () => {
 
   it("throws ApiError when the response shape is wrong", async () => {
     const fetchFn = fetchReturning(Response.json([{ id: "A" }]));
-    await expect(createApiClient({ fetchFn }).getParkings()).rejects.toThrow("Unexpected response shape");
+    await expect(createApiClient({ fetchFn }).getParkings()).rejects.toThrow(
+      "Unexpected response shape",
+    );
   });
 
   it("throws ApiError with status 0 when the network fails", async () => {
     const fetchFn = vi.fn<typeof fetch>().mockRejectedValue(new TypeError("Failed to fetch"));
-    const error = await createApiClient({ fetchFn }).getParkings().catch((e: unknown) => e);
+    const error = await createApiClient({ fetchFn })
+      .getParkings()
+      .catch((e: unknown) => e);
     expect((error as ApiError).status).toBe(0);
   });
 });
@@ -2341,11 +2387,13 @@ git commit -m "Add typed API client with realtime React bindings"
 ### Task 9: `packages/ui` shared components and theme
 
 **Files:**
+
 - Create: `packages/ui/package.json`, `tsconfig.json`, `vitest.config.ts`, `src/test-setup.ts`
 - Create: `packages/ui/src/theme.css`, `src/StatusPill.tsx`, `src/ParkingCard.tsx`, `src/LanguageToggle.tsx`, `src/index.ts`
 - Test: `packages/ui/test/components.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `ParkingSummary`, `ParkingStatus` (shared); `initI18n`, `setLanguage`, `SUPPORTED_LANGUAGES` (i18n).
 - Produces: `StatusPill({ status })`, `ParkingCard({ parking })` (renders `<article aria-label={parking.name}>`), `LanguageToggle()`, and the CSS export `@smart-parking/ui/theme.css`, which defines Tailwind colors `brand`, `free`, `occupied`, `unknown`.
 
@@ -2559,7 +2607,11 @@ import { useTranslation } from "react-i18next";
 export function LanguageToggle() {
   const { t, i18n } = useTranslation();
   return (
-    <div role="group" aria-label={t("language.label")} className="inline-flex rounded-lg bg-white/15 p-0.5">
+    <div
+      role="group"
+      aria-label={t("language.label")}
+      className="inline-flex rounded-lg bg-white/15 p-0.5"
+    >
       {SUPPORTED_LANGUAGES.map((lng) => {
         const active = i18n.language === lng;
         return (
@@ -2604,11 +2656,13 @@ git commit -m "Add shared UI components and theme tokens"
 ### Task 10: `apps/driver` PWA
 
 **Files:**
+
 - Create: `apps/driver/package.json`, `tsconfig.json`, `vite.config.ts`, `index.html`, `public/icon.svg`
 - Create: `apps/driver/src/main.tsx`, `src/App.tsx`, `src/index.css`, `src/test-setup.ts`
 - Test: `apps/driver/src/App.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `createApiClient`, `createRealtime`, `ApiError`, `ApiClient` (api-client); `ApiProvider`, `useParkings` (api-client/react); `initI18n` (i18n); `ParkingCard`, `LanguageToggle`, `theme.css` (ui).
 - Produces: `npm run dev -w @smart-parking/driver` on port 5173, proxying `/api` and `/socket.io` to `API_URL` (default `http://localhost:3000`).
 
@@ -2769,8 +2823,26 @@ import { describe, expect, it, vi } from "vitest";
 import { App } from "./App";
 
 const parkings: ParkingSummary[] = [
-  { id: "A", name: "Parking A", address: "x", lat: 0, lng: 0, freeCount: 4, totalCount: 6, status: "AVAILABLE" },
-  { id: "B", name: "Parking B", address: "y", lat: 0, lng: 0, freeCount: 0, totalCount: 6, status: "FULL" },
+  {
+    id: "A",
+    name: "Parking A",
+    address: "x",
+    lat: 0,
+    lng: 0,
+    freeCount: 4,
+    totalCount: 6,
+    status: "AVAILABLE",
+  },
+  {
+    id: "B",
+    name: "Parking B",
+    address: "y",
+    lat: 0,
+    lng: 0,
+    freeCount: 0,
+    totalCount: 6,
+    status: "FULL",
+  },
 ];
 
 function renderApp(getParkings: ApiClient["getParkings"]) {
@@ -2831,7 +2903,9 @@ export function App() {
             {t("common.error")}
           </p>
         )}
-        {parkings.data?.map((parking) => <ParkingCard key={parking.id} parking={parking} />)}
+        {parkings.data?.map((parking) => (
+          <ParkingCard key={parking.id} parking={parking} />
+        ))}
       </main>
     </div>
   );
@@ -2882,11 +2956,13 @@ git commit -m "Add driver PWA showing live parking availability"
 ### Task 11: `apps/dashboard`
 
 **Files:**
+
 - Create: `apps/dashboard/package.json`, `tsconfig.json`, `vite.config.ts`, `index.html`
 - Create: `apps/dashboard/src/main.tsx`, `src/App.tsx`, `src/index.css`, `src/test-setup.ts`
 - Test: `apps/dashboard/src/App.test.tsx`
 
 **Interfaces:**
+
 - Consumes: the same as Task 10.
 - Produces: `npm run dev -w @smart-parking/dashboard` on port 5174. W1 shows site cards. Slot grid, devices, events and pilot requests arrive in W5.
 
@@ -3015,8 +3091,26 @@ import { describe, expect, it, vi } from "vitest";
 import { App } from "./App";
 
 const parkings: ParkingSummary[] = [
-  { id: "A", name: "Parking A", address: "x", lat: 0, lng: 0, freeCount: 4, totalCount: 6, status: "AVAILABLE" },
-  { id: "B", name: "Parking B", address: "y", lat: 0, lng: 0, freeCount: 0, totalCount: 6, status: "FULL" },
+  {
+    id: "A",
+    name: "Parking A",
+    address: "x",
+    lat: 0,
+    lng: 0,
+    freeCount: 4,
+    totalCount: 6,
+    status: "AVAILABLE",
+  },
+  {
+    id: "B",
+    name: "Parking B",
+    address: "y",
+    lat: 0,
+    lng: 0,
+    freeCount: 0,
+    totalCount: 6,
+    status: "FULL",
+  },
 ];
 
 function renderApp(getParkings: ApiClient["getParkings"]) {
@@ -3081,7 +3175,9 @@ export function App() {
           </p>
         )}
         <div className="grid gap-4 sm:grid-cols-2">
-          {parkings.data?.map((parking) => <ParkingCard key={parking.id} parking={parking} />)}
+          {parkings.data?.map((parking) => (
+            <ParkingCard key={parking.id} parking={parking} />
+          ))}
         </div>
       </main>
     </div>
@@ -3133,11 +3229,13 @@ git commit -m "Add operator dashboard skeleton"
 ### Task 12: `apps/partners`
 
 **Files:**
+
 - Create: `apps/partners/package.json`, `tsconfig.json`, `vite.config.ts`, `index.html`
 - Create: `apps/partners/src/main.tsx`, `src/App.tsx`, `src/index.css`, `src/test-setup.ts`
 - Test: `apps/partners/src/App.test.tsx`
 
 **Interfaces:**
+
 - Consumes: the same as Task 10.
 - Produces: `npm run dev -w @smart-parking/partners` on port 5175. W1 has a hero section, the "live proof" cards and a CTA linking to `#pilot`. The full landing page and the pilot form arrive in W5.
 
@@ -3218,7 +3316,10 @@ export default defineConfig({
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Smart Parking — real-time parking availability for your sites" />
+    <meta
+      name="description"
+      content="Smart Parking — real-time parking availability for your sites"
+    />
     <title>Smart Parking — Partners</title>
   </head>
   <body>
@@ -3267,7 +3368,16 @@ import { describe, expect, it, vi } from "vitest";
 import { App } from "./App";
 
 const parkings: ParkingSummary[] = [
-  { id: "A", name: "Parking A", address: "x", lat: 0, lng: 0, freeCount: 4, totalCount: 6, status: "AVAILABLE" },
+  {
+    id: "A",
+    name: "Parking A",
+    address: "x",
+    lat: 0,
+    lng: 0,
+    freeCount: 4,
+    totalCount: 6,
+    status: "AVAILABLE",
+  },
 ];
 
 function renderApp(getParkings: ApiClient["getParkings"]) {
@@ -3285,8 +3395,13 @@ function renderApp(getParkings: ApiClient["getParkings"]) {
 describe("Partners App", () => {
   it("shows the hero, the pilot CTA and live proof", async () => {
     renderApp(vi.fn().mockResolvedValue(parkings));
-    expect(screen.getByRole("heading", { level: 1, name: "Зогсоолоо ухаалаг болгоё" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Pilot хүсэлт илгээх" })).toHaveAttribute("href", "#pilot");
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Зогсоолоо ухаалаг болгоё" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Pilot хүсэлт илгээх" })).toHaveAttribute(
+      "href",
+      "#pilot",
+    );
     expect(await screen.findByRole("article", { name: "Parking A" })).toHaveTextContent("4/6 сул");
   });
 
@@ -3344,7 +3459,9 @@ export function App() {
           </p>
         )}
         <div className="grid gap-4 sm:grid-cols-2">
-          {parkings.data?.map((parking) => <ParkingCard key={parking.id} parking={parking} />)}
+          {parkings.data?.map((parking) => (
+            <ParkingCard key={parking.id} parking={parking} />
+          ))}
         </div>
       </section>
     </div>
@@ -3396,10 +3513,12 @@ git commit -m "Add partner site skeleton with live proof"
 ### Task 13: `tools/simulator` status command
 
 **Files:**
+
 - Create: `tools/simulator/package.json`, `tsconfig.json`, `src/format.ts`, `src/cli.ts`
 - Test: `tools/simulator/test/format.test.ts`
 
 **Interfaces:**
+
 - Consumes: `createApiClient` (the Node-safe root export of api-client), `ParkingSummary`.
 - Produces: `formatStatus(parkings: ParkingSummary[]): string` and the command `npm run sim -w @smart-parking/simulator -- status`. W2 adds heartbeats, `set` and `scenario 2-car`.
 
@@ -3530,10 +3649,12 @@ git commit -m "Add simulator status command"
 ### Task 14: One-command dev, README, CI and full verification
 
 **Files:**
+
 - Modify: `package.json` (add `dev`, `db:migrate`, `db:seed`, `sim` scripts)
 - Create: `README.md`, `.github/workflows/ci.yml`
 
 **Interfaces:**
+
 - Consumes: every workspace's `dev`, `test`, `typecheck` script.
 - Produces: `npm run dev` starts the API and the 3 apps. CI runs lint, typecheck and test on every push to `main` and on every PR.
 
@@ -3580,31 +3701,31 @@ npm run db:seed      # parkings A/B, 12 slots, 3 devices
 npm run dev          # API + 3 web apps
 ```
 
-| App | URL | Owner |
-|---|---|---|
-| API | http://localhost:3000/api/parkings | Role 4 |
-| Driver PWA | http://localhost:5173 | Role 5 |
-| Operator dashboard | http://localhost:5174 | Role 6 |
-| Partner site | http://localhost:5175 | Role 6 |
+| App                | URL                                | Owner  |
+| ------------------ | ---------------------------------- | ------ |
+| API                | http://localhost:3000/api/parkings | Role 4 |
+| Driver PWA         | http://localhost:5173              | Role 5 |
+| Operator dashboard | http://localhost:5174              | Role 6 |
+| Partner site       | http://localhost:5175              | Role 6 |
 
 `npm run sim -- status` prints current availability from the API.
 
 ## Repository
 
-| Path | What | Owner |
-|---|---|---|
-| `apps/api` | Express + Socket.IO + Prisma (PostgreSQL) | Role 4 |
-| `apps/driver` | Driver PWA (Vite + React) | Role 5 |
-| `apps/dashboard` | Operator dashboard | Role 6 |
-| `apps/partners` | Business / partner site | Role 6 |
-| `packages/shared` | Zod schemas, types, availability rules (the contract) | all |
-| `packages/api-client` | Typed REST + realtime client, React hooks | Roles 5/6 |
-| `packages/ui` | Shared components + theme | Roles 5/6 |
-| `packages/i18n` | MN/EN dictionaries | all |
-| `tools/simulator` | Virtual device for simulated slots | Role 4 |
-| `firmware` | ESP32 PlatformIO project + `PROTOCOL.md` | Role 3 |
-| `hardware` | Wiring, photos, BOM | Role 2 |
-| `docs` | Specs, plans, WBS, tests, research | Roles 1/7 |
+| Path                  | What                                                  | Owner     |
+| --------------------- | ----------------------------------------------------- | --------- |
+| `apps/api`            | Express + Socket.IO + Prisma (PostgreSQL)             | Role 4    |
+| `apps/driver`         | Driver PWA (Vite + React)                             | Role 5    |
+| `apps/dashboard`      | Operator dashboard                                    | Role 6    |
+| `apps/partners`       | Business / partner site                               | Role 6    |
+| `packages/shared`     | Zod schemas, types, availability rules (the contract) | all       |
+| `packages/api-client` | Typed REST + realtime client, React hooks             | Roles 5/6 |
+| `packages/ui`         | Shared components + theme                             | Roles 5/6 |
+| `packages/i18n`       | MN/EN dictionaries                                    | all       |
+| `tools/simulator`     | Virtual device for simulated slots                    | Role 4    |
+| `firmware`            | ESP32 PlatformIO project + `PROTOCOL.md`              | Role 3    |
+| `hardware`            | Wiring, photos, BOM                                   | Role 2    |
+| `docs`                | Specs, plans, WBS, tests, research                    | Roles 1/7 |
 
 ## Everyday commands
 
@@ -3674,6 +3795,7 @@ Expected: lint and typecheck clean. Every workspace's tests pass (shared 15, i18
 - [ ] **Step 5: Verify the end-to-end dev experience**
 
 Run: `npm run dev`. In a second terminal:
+
 - `curl -s localhost:5173/api/parkings`: same JSON as the API (proving the Vite proxy works)
 - `npm run sim -- status`: two lines, `A … 4/6 AVAILABLE` and `B … 5/6 AVAILABLE`
 - Open http://localhost:5173, http://localhost:5174 and http://localhost:5175. Each shows the Parking A/B cards. Clicking EN switches the language, and the choice survives a reload.

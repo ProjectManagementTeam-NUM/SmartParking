@@ -19,7 +19,9 @@ export function App() {
             {t("common.error")}
           </p>
         )}
-        {parkings.data?.map((parking) => <ParkingCard key={parking.id} parking={parking} />)}
+        {parkings.data?.map((parking) => (
+          <ParkingCard key={parking.id} parking={parking} />
+        ))}
       </main>
     </div>
   );

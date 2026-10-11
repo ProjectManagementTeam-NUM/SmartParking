@@ -32,7 +32,9 @@ describe("createApiClient", () => {
 
   it("throws ApiError with the status for an HTML 502 from a proxy", async () => {
     const fetchFn = fetchReturning(new Response("<html>Bad Gateway</html>", { status: 502 }));
-    const error = await createApiClient({ fetchFn }).getParkings().catch((e: unknown) => e);
+    const error = await createApiClient({ fetchFn })
+      .getParkings()
+      .catch((e: unknown) => e);
     expect(error).toBeInstanceOf(ApiError);
     expect((error as ApiError).status).toBe(502);
   });
@@ -44,12 +46,16 @@ describe("createApiClient", () => {
 
   it("throws ApiError when the response shape is wrong", async () => {
     const fetchFn = fetchReturning(Response.json([{ id: "A" }]));
-    await expect(createApiClient({ fetchFn }).getParkings()).rejects.toThrow("Unexpected response shape");
+    await expect(createApiClient({ fetchFn }).getParkings()).rejects.toThrow(
+      "Unexpected response shape",
+    );
   });
 
   it("throws ApiError with status 0 when the network fails", async () => {
     const fetchFn = vi.fn<typeof fetch>().mockRejectedValue(new TypeError("Failed to fetch"));
-    const error = await createApiClient({ fetchFn }).getParkings().catch((e: unknown) => e);
+    const error = await createApiClient({ fetchFn })
+      .getParkings()
+      .catch((e: unknown) => e);
     expect((error as ApiError).status).toBe(0);
   });
 });

@@ -16,6 +16,7 @@ Success = the final-day **2-car scenario** runs reliably, offline, in front of j
 3. Car 2 arrives at gate B → barrier stays closed → driver app suggests A → car 2 parks in A.
 
 ### In scope
+
 - 2 physical parking models, 12 represented / 3 live slots, 2 entrance gates
 - Driver Web/PWA, Operator Dashboard, Business/Partner website
 - Shared backend + realtime API
@@ -23,6 +24,7 @@ Success = the final-day **2-car scenario** runs reliably, offline, in front of j
 - MN + EN UI
 
 ### Out of scope (from proposal)
+
 Native mobile app · real GPS navigation · reservations · payments · ANPR · AI prediction · production-scale cloud · user accounts.
 
 ## 2. Repository
@@ -72,22 +74,22 @@ Ownership maps to the roles table: each top-level app/folder has one owner and o
 
 ## 3. Stack
 
-| Layer | Choice |
-|---|---|
-| Runtime | Node.js 22 LTS |
-| Package manager | npm workspaces |
-| API | Express + Zod validation |
-| Browser realtime | Socket.IO (rooms) |
-| Device realtime | plain WebSocket (`ws`) at `/ws/device` |
-| Database | PostgreSQL 16 via Prisma (same engine in every environment) |
-| Frontends | Vite + React + TS ×3; `vite-plugin-pwa` on driver |
-| Styling | Tailwind + `packages/ui` preset |
-| Data fetching | TanStack Query; socket events update/invalidate caches |
-| i18n | react-i18next, dictionaries in `packages/i18n`, default `mn` |
-| Quality | ESLint + Prettier, Vitest, supertest, Playwright |
-| CI | GitHub Actions (lint, typecheck, unit, integration with Postgres service) |
-| Containers | Docker Compose; Caddy as reverse proxy + static server |
-| Firmware | PlatformIO + Arduino framework, ArduinoJson, arduinoWebSockets, ESP32Servo, Adafruit SSD1306 |
+| Layer            | Choice                                                                                       |
+| ---------------- | -------------------------------------------------------------------------------------------- |
+| Runtime          | Node.js 22 LTS                                                                               |
+| Package manager  | npm workspaces                                                                               |
+| API              | Express + Zod validation                                                                     |
+| Browser realtime | Socket.IO (rooms)                                                                            |
+| Device realtime  | plain WebSocket (`ws`) at `/ws/device`                                                       |
+| Database         | PostgreSQL 16 via Prisma (same engine in every environment)                                  |
+| Frontends        | Vite + React + TS ×3; `vite-plugin-pwa` on driver                                            |
+| Styling          | Tailwind + `packages/ui` preset                                                              |
+| Data fetching    | TanStack Query; socket events update/invalidate caches                                       |
+| i18n             | react-i18next, dictionaries in `packages/i18n`, default `mn`                                 |
+| Quality          | ESLint + Prettier, Vitest, supertest, Playwright                                             |
+| CI               | GitHub Actions (lint, typecheck, unit, integration with Postgres service)                    |
+| Containers       | Docker Compose; Caddy as reverse proxy + static server                                       |
+| Firmware         | PlatformIO + Arduino framework, ArduinoJson, arduinoWebSockets, ESP32Servo, Adafruit SSD1306 |
 
 Not used, by decision: Bun/pnpm (team familiarity), Supabase (not permitted), MQTT (overkill for 2 devices).
 
@@ -105,16 +107,16 @@ PilotRequest  id, name, organization, email, phone?, siteCount?, message?, creat
 - `Slot.state`: `FREE | OCCUPIED | UNKNOWN`
 - `Slot.source`: `LIVE | SIMULATED`
 - **Derived, never stored:**
-  - `parking.freeCount` = number of slots with `state = FREE` (UNKNOWN is *not* free)
+  - `parking.freeCount` = number of slots with `state = FREE` (UNKNOWN is _not_ free)
   - `parking.status` = `freeCount > 0 ? AVAILABLE : FULL`
   - `device.online` = `lastSeenAt` within the last **15 s**
 
 **Seed:**
 
 | Parking | LIVE slots (device) | SIMULATED slots (device `simulator`) |
-|---|---|---|
-| A | A1, A2 (`esp32-a`) | A3–A6 |
-| B | B1 (`esp32-b`) | B2–B6 |
+| ------- | ------------------- | ------------------------------------ |
+| A       | A1, A2 (`esp32-a`)  | A3–A6                                |
+| B       | B1 (`esp32-b`)      | B2–B6                                |
 
 **Sensor noise** is filtered on the ESP32 (state change only after N consistent readings); the API trusts reported state.
 
@@ -122,19 +124,20 @@ PilotRequest  id, name, organization, email, phone?, siteCount?, message?, creat
 
 Base path `/api`. Every request and response body is defined by a Zod schema in `packages/shared`.
 
-| Method | Path | Auth | Purpose |
-|---|---|---|---|
-| GET | `/parkings` | — | list with `freeCount`, `status` |
-| GET | `/parkings/:id` | — | parking + slots + gate |
-| GET | `/slots?parkingId=` | — | slot list |
-| PATCH | `/slots/:id` | operator | manual override `{ state }` |
-| GET | `/devices` | — | devices with `online` |
-| GET | `/events?limit=50` | operator | latest events, newest first |
-| POST | `/pilot-requests` | — | Request a Pilot form |
-| GET | `/pilot-requests` | operator | list submissions |
-| POST | `/ingest` | device | sensor readings + heartbeat + gate events |
+| Method | Path                | Auth     | Purpose                                   |
+| ------ | ------------------- | -------- | ----------------------------------------- |
+| GET    | `/parkings`         | —        | list with `freeCount`, `status`           |
+| GET    | `/parkings/:id`     | —        | parking + slots + gate                    |
+| GET    | `/slots?parkingId=` | —        | slot list                                 |
+| PATCH  | `/slots/:id`        | operator | manual override `{ state }`               |
+| GET    | `/devices`          | —        | devices with `online`                     |
+| GET    | `/events?limit=50`  | operator | latest events, newest first               |
+| POST   | `/pilot-requests`   | —        | Request a Pilot form                      |
+| GET    | `/pilot-requests`   | operator | list submissions                          |
+| POST   | `/ingest`           | device   | sensor readings + heartbeat + gate events |
 
 ### `POST /ingest`
+
 Header `X-Device-Key: <key>`. Body:
 
 ```json
@@ -152,6 +155,7 @@ Header `X-Device-Key: <key>`. Body:
 - A device may only write slots whose `deviceId` matches it, otherwise `403`.
 
 ### Device WebSocket `/ws/device?deviceId=…&key=…`
+
 Server → device, on connect and on every availability change for the device's parking (the `simulator` device has no parking and receives updates for all parkings):
 
 ```json
@@ -159,6 +163,7 @@ Server → device, on connect and on every availability change for the device's 
 ```
 
 ### Auth (POC level)
+
 - Device keys and one `OPERATOR_TOKEN` come from environment variables. Device keys are hashed into `Device.apiKeyHash` at seed time.
 - Operator endpoints require `Authorization: Bearer <OPERATOR_TOKEN>`.
 - No user accounts.
@@ -177,12 +182,12 @@ domain (slot changed / device online changed / gate decision)
 
 Socket.IO events:
 
-| Event | Rooms | Payload |
-|---|---|---|
-| `slot.updated` | `parking:<id>`, `dashboard` | Slot |
-| `parking.updated` | broadcast | `{ id, freeCount, status }` |
-| `device.updated` | `dashboard` | `{ id, online, lastSeenAt }` |
-| `event.created` | `dashboard` | Event |
+| Event             | Rooms                       | Payload                      |
+| ----------------- | --------------------------- | ---------------------------- |
+| `slot.updated`    | `parking:<id>`, `dashboard` | Slot                         |
+| `parking.updated` | broadcast                   | `{ id, freeCount, status }`  |
+| `device.updated`  | `dashboard`                 | `{ id, online, lastSeenAt }` |
+| `event.created`   | `dashboard`                 | Event                        |
 
 When a client reconnects it refetches everything through TanStack Query; missed events are not replayed.
 
@@ -196,6 +201,7 @@ When a client reconnects it refetches everything through TanStack Query; missed 
 ## 8. Applications
 
 ### Driver PWA — `apps/driver`
+
 - **Parking list:** a card per site showing free/total, AVAILABLE/FULL badge and a live indicator. Sorted by distance when browser geolocation is granted, otherwise fixed order. No map SDK.
 - **Parking detail:** 2×3 slot grid (FREE green / OCCUPIED red / UNKNOWN grey), **one suggested slot highlighted**, gate status.
 - **FULL fallback:** if the selected site is FULL, a banner suggests the other site with its free count and a switch button.
@@ -203,6 +209,7 @@ When a client reconnects it refetches everything through TanStack Query; missed 
 - **PWA:** manifest + icons, app shell precached; API data is never served from cache.
 
 ### Operator Dashboard — `apps/dashboard`
+
 - Overview: per-site free/total, status, gate position + last decision.
 - Slot grid with `LIVE`/`SIM` tag; clicking a slot opens a FREE/OCCUPIED override (PATCH).
 - Devices: online/offline, last seen, firmware version.
@@ -211,9 +218,11 @@ When a client reconnects it refetches everything through TanStack Query; missed 
 - Operator token entered once, stored in localStorage.
 
 ### Business / Partner site — `apps/partners`
+
 Single landing page: Problem → Solution (3-step how it works) → **Live proof** (read-only A/B availability widget from the API) → Pilot package → Benefits/ROI → **Request a Pilot** form (POST `/pilot-requests`, with success and error states).
 
 ### Shared frontend concerns
+
 - `packages/api-client` is the only code that knows URLs and socket setup.
 - `packages/ui` holds shared components and the Tailwind preset.
 - `packages/i18n` holds MN/EN dictionaries. The language toggle appears on all 3 sites and is persisted in localStorage.
@@ -230,13 +239,14 @@ Single landing page: Problem → Solution (3-step how it works) → **Live proof
 
 ## 10. Environments & deployment
 
-| Env | How |
-|---|---|
-| Local dev | `docker compose -f docker-compose.dev.yml up -d` (Postgres only) + `npm run dev` (api, 3 frontends, simulator; hot reload) |
-| Staging | **Deferred until ~W3.** Requirement: any Docker-capable host running `docker-compose.yml` (VPS preferred), or a PaaS building `apps/api/Dockerfile` |
-| Demo day | Demo laptop runs `docker compose up` on a dedicated Wi-Fi hotspot, fully offline. ESP32s use plain HTTP/WS to the laptop's LAN IP |
+| Env       | How                                                                                                                                                 |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Local dev | `docker compose -f docker-compose.dev.yml up -d` (Postgres only) + `npm run dev` (api, 3 frontends, simulator; hot reload)                          |
+| Staging   | **Deferred until ~W3.** Requirement: any Docker-capable host running `docker-compose.yml` (VPS preferred), or a PaaS building `apps/api/Dockerfile` |
+| Demo day  | Demo laptop runs `docker compose up` on a dedicated Wi-Fi hotspot, fully offline. ESP32s use plain HTTP/WS to the laptop's LAN IP                   |
 
 `docker-compose.yml` services:
+
 - `db`: postgres:16 with a named volume
 - `api`: runs `prisma migrate deploy` then starts; `restart: unless-stopped`
 - `web`: Caddy serving the 3 built frontends and proxying `/api`, `/socket.io` and `/ws/device` to `api`. Routes by hostname when a domain exists (`app.`, `dashboard.`, root), otherwise by port or path on the LAN.
@@ -245,15 +255,15 @@ Firmware reads the server host and port from a config header, so switching betwe
 
 ## 11. Error handling
 
-| Failure | Behaviour |
-|---|---|
-| Invalid input | `400` + Zod field errors |
-| Missing or wrong device key | `401` |
-| Device writes a slot it doesn't own | `403` |
-| Device silent > 15 s | marked offline; its slots → `UNKNOWN`; `device.updated` + `event.created` emitted (checked by a 5 s interval job) |
-| Device WS drops | gate uses cached status, OLED `OFFLINE`, reconnect with backoff |
-| Browser socket drops | banner + last-updated time; full refetch on reconnect |
-| API crash | container restarts; all state is in Postgres |
+| Failure                             | Behaviour                                                                                                         |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Invalid input                       | `400` + Zod field errors                                                                                          |
+| Missing or wrong device key         | `401`                                                                                                             |
+| Device writes a slot it doesn't own | `403`                                                                                                             |
+| Device silent > 15 s                | marked offline; its slots → `UNKNOWN`; `device.updated` + `event.created` emitted (checked by a 5 s interval job) |
+| Device WS drops                     | gate uses cached status, OLED `OFFLINE`, reconnect with backoff                                                   |
+| Browser socket drops                | banner + last-updated time; full refetch on reconnect                                                             |
+| API crash                           | container restarts; all state is in Postgres                                                                      |
 
 ## 12. Known limitations
 
@@ -263,26 +273,26 @@ Firmware reads the server host and port from a config header, so switching betwe
 
 ## 13. Testing
 
-| Level | Tool | Covers |
-|---|---|---|
-| Unit | Vitest | availability/status, offline detection, slot ownership, `suggestSlot` |
-| API integration | Vitest + supertest + Postgres container | `/ingest` → DB → emitted Socket.IO/device events; auth errors |
-| Contract | Vitest | JSON examples in `firmware/PROTOCOL.md` validate against `packages/shared` schemas |
-| E2E | Playwright | `scenario 2-car`: driver shows B FULL + switch-to-A banner; dashboard logs `Gate B DENIED` |
-| Hardware | manual checklist, `docs/test-plan.md` → `docs/test-results.md` | HC-SR04 thresholds, servo angles, OLED text, power under load |
-| CI | GitHub Actions | lint, typecheck, unit, integration on every PR |
+| Level           | Tool                                                           | Covers                                                                                     |
+| --------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Unit            | Vitest                                                         | availability/status, offline detection, slot ownership, `suggestSlot`                      |
+| API integration | Vitest + supertest + Postgres container                        | `/ingest` → DB → emitted Socket.IO/device events; auth errors                              |
+| Contract        | Vitest                                                         | JSON examples in `firmware/PROTOCOL.md` validate against `packages/shared` schemas         |
+| E2E             | Playwright                                                     | `scenario 2-car`: driver shows B FULL + switch-to-A banner; dashboard logs `Gate B DENIED` |
+| Hardware        | manual checklist, `docs/test-plan.md` → `docs/test-results.md` | HC-SR04 thresholds, servo angles, OLED text, power under load                              |
+| CI              | GitHub Actions                                                 | lint, typecheck, unit, integration on every PR                                             |
 
 ## 14. Delivery alignment (8-week plan)
 
-| Week | Platform milestone |
-|---|---|
-| W1 | Repo skeleton, shared schemas, Prisma schema + seed, PROTOCOL.md, compose dev DB |
-| W2 | Hardware proof (roles 2/3); simulator posting to a stub `/ingest` |
-| W3 | API + realtime complete; staging host decided |
-| W4 | Driver PWA |
-| W5 | Dashboard + Partner site; Docker build of full stack |
-| W6 | Integration: real ESP32 A + B + simulator against one API |
-| W7 | System test (E2E + hardware checklist), pitch |
-| W8 | Freeze, demo-laptop rehearsal of the 2-car scenario |
+| Week | Platform milestone                                                               |
+| ---- | -------------------------------------------------------------------------------- |
+| W1   | Repo skeleton, shared schemas, Prisma schema + seed, PROTOCOL.md, compose dev DB |
+| W2   | Hardware proof (roles 2/3); simulator posting to a stub `/ingest`                |
+| W3   | API + realtime complete; staging host decided                                    |
+| W4   | Driver PWA                                                                       |
+| W5   | Dashboard + Partner site; Docker build of full stack                             |
+| W6   | Integration: real ESP32 A + B + simulator against one API                        |
+| W7   | System test (E2E + hardware checklist), pitch                                    |
+| W8   | Freeze, demo-laptop rehearsal of the 2-car scenario                              |
 
 From W6 onward no new core features, only integration, stability and pitch work (per the proposal).

@@ -5,7 +5,13 @@ export const DEVICE_IDS = ["esp32-a", "esp32-b", "simulator"] as const;
 export type DeviceId = (typeof DEVICE_IDS)[number];
 
 const PARKINGS: Prisma.ParkingCreateManyInput[] = [
-  { id: "A", name: "Parking A", address: "Sukhbaatar Square, Ulaanbaatar", lat: 47.9186, lng: 106.9177 },
+  {
+    id: "A",
+    name: "Parking A",
+    address: "Sukhbaatar Square, Ulaanbaatar",
+    lat: 47.9186,
+    lng: 106.9177,
+  },
   { id: "B", name: "Parking B", address: "Peace Avenue, Ulaanbaatar", lat: 47.9135, lng: 106.9156 },
 ];
 
@@ -46,7 +52,9 @@ export async function seed(prisma: PrismaClient, keys: Record<DeviceId, string>)
         { id: "simulator", parkingId: null, apiKeyHash: hashDeviceKey(keys.simulator) },
       ],
     }),
-    prisma.slot.createMany({ data: [...slotsFor("A", 2, "esp32-a"), ...slotsFor("B", 1, "esp32-b")] }),
+    prisma.slot.createMany({
+      data: [...slotsFor("A", 2, "esp32-a"), ...slotsFor("B", 1, "esp32-b")],
+    }),
     prisma.gate.createMany({ data: [{ parkingId: "A" }, { parkingId: "B" }] }),
   ]);
 }

@@ -9,7 +9,16 @@ import { describe, expect, it, vi } from "vitest";
 import { App } from "./App";
 
 const parkings: ParkingSummary[] = [
-  { id: "A", name: "Parking A", address: "x", lat: 0, lng: 0, freeCount: 4, totalCount: 6, status: "AVAILABLE" },
+  {
+    id: "A",
+    name: "Parking A",
+    address: "x",
+    lat: 0,
+    lng: 0,
+    freeCount: 4,
+    totalCount: 6,
+    status: "AVAILABLE",
+  },
 ];
 
 function renderApp(getParkings: ApiClient["getParkings"]) {
@@ -27,8 +36,13 @@ function renderApp(getParkings: ApiClient["getParkings"]) {
 describe("Partners App", () => {
   it("shows the hero, the pilot CTA and live proof", async () => {
     renderApp(vi.fn().mockResolvedValue(parkings));
-    expect(screen.getByRole("heading", { level: 1, name: "Зогсоолоо ухаалаг болгоё" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Pilot хүсэлт илгээх" })).toHaveAttribute("href", "#pilot");
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Зогсоолоо ухаалаг болгоё" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Pilot хүсэлт илгээх" })).toHaveAttribute(
+      "href",
+      "#pilot",
+    );
     expect(await screen.findByRole("article", { name: "Parking A" })).toHaveTextContent("4/6 сул");
   });
 
