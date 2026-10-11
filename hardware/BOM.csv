@@ -1,0 +1,14 @@
+item,qty,status,purpose
+ESP32,2,have,site controllers A and B
+HC-SR04 ultrasonic sensor,3,have,live slot sensors (A1 A2 B1)
+OLED display,1,have,entrance display
+LED pair,3,have,slot-status indicators
+PIR sensor,1,have,spare
+Buzzer,1,have,spare
+SG90 servo,2,need,entrance gate barriers
+IR proximity sensor,2,need,car detection at gates
+OLED display,1,need,second entrance display
+5V ~2A power supply,1,need,power for servos and boards
+Breadboard / perfboard,1,need,wiring
+Jumper wires,1,need,wiring
+Resistors for HC-SR04 ECHO divider,3,need,5V to 3.3V level shift for ESP32 input
