@@ -1,0 +1,7 @@
+/* Shared design tokens. Apps import this after `@import "tailwindcss";` */
+@theme {
+  --color-brand: #0f766e;
+  --color-free: #16a34a;
+  --color-occupied: #dc2626;
+  --color-unknown: #9ca3af;
+}
