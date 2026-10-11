@@ -75,3 +75,31 @@ describe("other routes", () => {
     expect(res.body).toEqual({ error: "not_found" });
   });
 });
+
+describe("client errors", () => {
+  it("answers malformed JSON with 400, not 500", async () => {
+    const res = await request(createApp({ prisma }))
+      .post("/api/health")
+      .set("Content-Type", "application/json")
+      .send('{"deviceId": "esp32-b", "slots": [')
+      .expect(400);
+    expect(res.body).toEqual({ error: "bad_request" });
+  });
+
+  it("answers an oversized body with 413", async () => {
+    const res = await request(createApp({ prisma }))
+      .post("/api/health")
+      .set("Content-Type", "application/json")
+      .send(JSON.stringify({ padding: "x".repeat(40_000) }))
+      .expect(413);
+    expect(res.body).toEqual({ error: "payload_too_large" });
+  });
+
+  it("answers a malformed URL escape with 400", async () => {
+    await request(createApp({ prisma })).get("/api/parkings/%E0").expect(400);
+  });
+
+  it("treats an id with a NUL byte as not found instead of crashing the query", async () => {
+    await request(createApp({ prisma })).get("/api/parkings/%00").expect(404);
+  });
+});

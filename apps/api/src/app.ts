@@ -20,11 +20,26 @@ export function createApp({ prisma }: AppDeps): Express {
     res.status(404).json({ error: "not_found" });
   });
 
-  // Express 5 forwards rejected async handlers here.
+  // Express 5 forwards rejected async handlers here. Client errors (bad JSON, oversized
+  // body, malformed URL) carry a 4xx status from Express/body-parser; only 5xx are logged.
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+    const status = httpStatusOf(err);
+    if (status >= 400 && status < 500) {
+      res.status(status).json({ error: status === 413 ? "payload_too_large" : "bad_request" });
+      return;
+    }
     console.error(err);
     res.status(500).json({ error: "internal_error" });
   });
 
   return app;
+}
+
+function httpStatusOf(err: unknown): number {
+  if (typeof err === "object" && err !== null) {
+    const { status, statusCode } = err as { status?: unknown; statusCode?: unknown };
+    if (typeof status === "number") return status;
+    if (typeof statusCode === "number") return statusCode;
+  }
+  return 500;
 }

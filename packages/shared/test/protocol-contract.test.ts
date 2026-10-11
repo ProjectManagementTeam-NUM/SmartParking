@@ -10,16 +10,25 @@ const schemas: Record<string, z.ZodType> = {
   availability: DeviceAvailabilityMessage,
 };
 
-function examples(): Array<{ tag: string; json: unknown }> {
-  const markdown = readFileSync(protocolPath, "utf8");
-  const blocks = [...markdown.matchAll(/```json (\w+)\n([\s\S]*?)```/g)];
+function parseExamples(markdown: string): Array<{ tag: string; json: unknown }> {
+  const blocks = [...markdown.matchAll(/```json (\w+)\r?\n([\s\S]*?)```/g)];
   return blocks.map(([, tag, body]) => ({ tag: tag!, json: JSON.parse(body!) }));
+}
+
+function examples(): Array<{ tag: string; json: unknown }> {
+  return parseExamples(readFileSync(protocolPath, "utf8"));
 }
 
 describe("firmware/PROTOCOL.md examples", () => {
   it("contains at least one example of each message type", () => {
     const tags = new Set(examples().map((example) => example.tag));
     expect(tags).toEqual(new Set(Object.keys(schemas)));
+  });
+
+  it("finds the same examples in a CRLF (Windows) checkout", () => {
+    const markdown = readFileSync(protocolPath, "utf8");
+    const crlf = markdown.replace(/\r?\n/g, "\r\n");
+    expect(parseExamples(crlf)).toHaveLength(parseExamples(markdown).length);
   });
 
   it("every example matches the shared schema", () => {
