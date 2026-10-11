@@ -1,0 +1,27 @@
+{
+  "name": "@smart-parking/api-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./react": "./src/react.tsx"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@smart-parking/shared": "*",
+    "@tanstack/react-query": "^5.87.1",
+    "socket.io-client": "^4.8.1",
+    "zod": "^4.1.5"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  }
+}
