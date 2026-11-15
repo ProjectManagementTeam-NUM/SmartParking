@@ -16,7 +16,12 @@ export interface AppDeps {
   now?: () => Date;
 }
 
-export function createApp({ prisma, operatorToken, now = () => new Date() }: AppDeps): Express {
+export function createApp({
+  prisma,
+  bus,
+  operatorToken,
+  now = () => new Date(),
+}: AppDeps): Express {
   const app = express();
   app.disable("x-powered-by");
   app.use(express.json({ limit: "32kb" }));
@@ -25,7 +30,7 @@ export function createApp({ prisma, operatorToken, now = () => new Date() }: App
     res.json({ ok: true });
   });
   app.use("/api/parkings", parkingsRouter(prisma));
-  app.use("/api/slots", slotsRouter(prisma));
+  app.use("/api/slots", slotsRouter({ prisma, bus, operatorToken, now }));
   app.use("/api/devices", devicesRouter(prisma, now));
   app.use("/api/events", eventsRouter(prisma, operatorToken));
   app.use("/api/pilot-requests", pilotRequestsRouter(prisma, operatorToken, now));
