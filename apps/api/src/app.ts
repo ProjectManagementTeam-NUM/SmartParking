@@ -3,6 +3,7 @@ import express, { type Express, type NextFunction, type Request, type Response }
 import type { EventBus } from "./realtime/bus";
 import { devicesRouter } from "./routes/devices";
 import { eventsRouter } from "./routes/events";
+import { ingestRouter } from "./routes/ingest";
 import { parkingsRouter } from "./routes/parkings";
 import { pilotRequestsRouter } from "./routes/pilot-requests";
 import { slotsRouter } from "./routes/slots";
@@ -33,6 +34,7 @@ export function createApp({
   app.use("/api/slots", slotsRouter({ prisma, bus, operatorToken, now }));
   app.use("/api/devices", devicesRouter(prisma, now));
   app.use("/api/events", eventsRouter(prisma, operatorToken));
+  app.use("/api/ingest", ingestRouter({ prisma, bus, now }));
   app.use("/api/pilot-requests", pilotRequestsRouter(prisma, operatorToken, now));
 
   app.use("/api", (_req, res) => {

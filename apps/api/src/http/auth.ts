@@ -1,5 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
+import type { Device as DbDevice, PrismaClient } from "@prisma/client";
 import type { RequestHandler } from "express";
+import { hashDeviceKey } from "../domain/device-keys";
 
 /**
  * Guards operator-only endpoints (PATCH /slots/:id, GET /events, GET /pilot-requests).
@@ -30,4 +32,22 @@ export function tokensMatch(expected: string | undefined, given: string | undefi
   const a = Buffer.from(expected);
   const b = Buffer.from(given);
   return a.length === b.length && timingSafeEqual(a, b);
+}
+
+// Device ids are short codes ("esp32-a"). Anything else can't exist, so skip the query.
+const DEVICE_ID = /^[A-Za-z0-9_-]{1,64}$/;
+
+/**
+ * Returns the device if `key` is its key, otherwise null (unknown device, missing or wrong key).
+ * Used by POST /ingest and the device WebSocket.
+ */
+export async function authenticateDevice(
+  prisma: PrismaClient,
+  deviceId: string,
+  key: string | undefined,
+): Promise<DbDevice | null> {
+  if (!key || !DEVICE_ID.test(deviceId)) return null;
+  const device = await prisma.device.findUnique({ where: { id: deviceId } });
+  if (!device) return null;
+  return tokensMatch(device.apiKeyHash, hashDeviceKey(key)) ? device : null;
 }
