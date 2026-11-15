@@ -3,6 +3,7 @@ import type {
   Event as DbEvent,
   Gate as DbGate,
   Parking as DbParking,
+  PilotRequest as DbPilotRequest,
   Slot as DbSlot,
 } from "@prisma/client";
 import {
@@ -14,6 +15,7 @@ import {
   type Gate,
   type ParkingDetail,
   type ParkingSummary,
+  type PilotRequest,
   type Slot,
 } from "@smart-parking/shared";
 
@@ -83,4 +85,17 @@ export function toEventRecord(row: DbEvent): EventRecord {
 
 function isJsonObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+export function toPilotRequest(row: DbPilotRequest): PilotRequest {
+  return {
+    id: row.id,
+    name: row.name,
+    organization: row.organization,
+    email: row.email,
+    phone: row.phone,
+    siteCount: row.siteCount,
+    message: row.message,
+    createdAt: row.createdAt.toISOString(),
+  };
 }
