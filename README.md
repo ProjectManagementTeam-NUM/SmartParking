@@ -28,6 +28,26 @@ npm run dev          # API + 3 web apps
 
 `npm run sim -- status` prints current availability from the API.
 
+## API endpoints
+
+Base URL `http://localhost:3000/api`. Contracts: `packages/shared`. Device wire format: `firmware/PROTOCOL.md`.
+
+| Method | Path                   | Auth                               | Purpose                                          |
+| ------ | ---------------------- | ---------------------------------- | ------------------------------------------------ |
+| GET    | `/parkings`            | —                                  | Sites with `freeCount`, `totalCount`, `status`   |
+| GET    | `/parkings/:id`        | —                                  | Site + slots + gate                              |
+| GET    | `/slots?parkingId=`    | —                                  | Slot list (optionally one site)                  |
+| PATCH  | `/slots/:id`           | operator                           | Manual override `{ state }`                      |
+| GET    | `/devices`             | —                                  | Devices with derived `online`                    |
+| GET    | `/events?limit=50`     | operator                           | Event log, newest first (limit 1–200)            |
+| POST   | `/pilot-requests`      | —                                  | "Request a Pilot" form → `201`                   |
+| GET    | `/pilot-requests`      | operator                           | Submissions, newest first                        |
+| POST   | `/ingest`              | device (`X-Device-Key`)            | Heartbeat + slot reports + gate decision → `204` |
+| WS     | `/ws/device?deviceId=` | device (`X-Device-Key` or `&key=`) | Server → gate `availability` messages            |
+
+Operator auth: `Authorization: Bearer $OPERATOR_TOKEN` (unset token → always `401`).
+Socket.IO: `parking.updated` to everyone; `subscribe { parkingId }` for `slot.updated`; connect with `auth: { token }` for the dashboard feed (`slot.updated`, `device.updated`, `event.created`).
+
 ## Repository
 
 | Path                  | What                                                  | Owner     |

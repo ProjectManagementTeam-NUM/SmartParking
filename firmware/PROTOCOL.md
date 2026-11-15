@@ -8,14 +8,22 @@ Every ` ```json <tag> ` block below is checked against them in CI (`protocol-con
 
 - Header: `X-Device-Key: <device key>`, `Content-Type: application/json`
 - Send on **every state change** and at least **every 5 s** (heartbeat).
+- Include **every slot you own in every POST**, heartbeats included. After an outage this restores real states at once; the server writes only slots whose state actually changed.
 - A device silent for **15 s** is offline. Its slots become `UNKNOWN`.
 - Report only `FREE` or `OCCUPIED`. Filter sensor noise on the device and report a change only after N consistent readings.
 - A device may write only the slots it owns, otherwise `403`.
 
-Heartbeat:
+Heartbeat (with the full slot list):
 
 ```json ingest
-{ "deviceId": "esp32-a", "firmwareVersion": "0.1.0" }
+{
+  "deviceId": "esp32-a",
+  "firmwareVersion": "0.1.0",
+  "slots": [
+    { "id": "A1", "state": "FREE" },
+    { "id": "A2", "state": "OCCUPIED" }
+  ]
+}
 ```
 
 Slot change:
@@ -34,9 +42,11 @@ Gate decision (car detected at gate, barrier kept closed):
 { "deviceId": "esp32-b", "gate": { "event": "DENIED" } }
 ```
 
-Responses: `204` ok · `400` invalid body · `401` bad key · `403` slot not owned.
+Responses: `204` ok · `400` invalid body · `401` bad key · `403` slot not owned (the whole POST is rejected, nothing is written), or a gate event from a device without a gate.
 
-## 2. API → Device: WebSocket `/ws/device?deviceId=<id>&key=<key>`
+## 2. API → Device: WebSocket `/ws/device?deviceId=<id>`
+
+Send the key in the `X-Device-Key` handshake header (preferred: query strings end up in logs). `&key=<key>` in the URL still works for older firmware.
 
 Sent on connect and on every availability change for the device's parking:
 

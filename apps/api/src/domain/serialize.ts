@@ -1,9 +1,21 @@
-import type { Gate as DbGate, Parking as DbParking, Slot as DbSlot } from "@prisma/client";
+import type {
+  Device as DbDevice,
+  Event as DbEvent,
+  Gate as DbGate,
+  Parking as DbParking,
+  PilotRequest as DbPilotRequest,
+  Slot as DbSlot,
+} from "@prisma/client";
 import {
   computeAvailability,
+  isDeviceOnline,
+  type Device,
+  EventType,
+  type EventRecord,
   type Gate,
   type ParkingDetail,
   type ParkingSummary,
+  type PilotRequest,
   type Slot,
 } from "@smart-parking/shared";
 
@@ -46,5 +58,44 @@ export function toParkingDetail(
     ...toParkingSummary(parking),
     slots: parking.slots.map(toSlot),
     gate: parking.gate ? toGate(parking.gate) : null,
+  };
+}
+
+export function toDevice(device: DbDevice, now: Date): Device {
+  return {
+    id: device.id,
+    parkingId: device.parkingId,
+    lastSeenAt: device.lastSeenAt?.toISOString() ?? null,
+    firmwareVersion: device.firmwareVersion,
+    online: isDeviceOnline(device.lastSeenAt, now),
+  };
+}
+
+export function toEventRecord(row: DbEvent): EventRecord {
+  return {
+    id: row.id,
+    type: EventType.parse(row.type),
+    parkingId: row.parkingId,
+    slotId: row.slotId,
+    deviceId: row.deviceId,
+    payload: isJsonObject(row.payload) ? row.payload : {},
+    createdAt: row.createdAt.toISOString(),
+  };
+}
+
+function isJsonObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+export function toPilotRequest(row: DbPilotRequest): PilotRequest {
+  return {
+    id: row.id,
+    name: row.name,
+    organization: row.organization,
+    email: row.email,
+    phone: row.phone,
+    siteCount: row.siteCount,
+    message: row.message,
+    createdAt: row.createdAt.toISOString(),
   };
 }

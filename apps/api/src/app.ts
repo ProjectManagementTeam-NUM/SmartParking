@@ -1,12 +1,28 @@
 import type { PrismaClient } from "@prisma/client";
 import express, { type Express, type NextFunction, type Request, type Response } from "express";
+import type { EventBus } from "./realtime/bus";
+import { devicesRouter } from "./routes/devices";
+import { eventsRouter } from "./routes/events";
+import { ingestRouter } from "./routes/ingest";
 import { parkingsRouter } from "./routes/parkings";
+import { pilotRequestsRouter } from "./routes/pilot-requests";
+import { slotsRouter } from "./routes/slots";
 
 export interface AppDeps {
   prisma: PrismaClient;
+  bus: EventBus;
+  /** Bearer token for operator endpoints. Unset or empty → operator endpoints always 401. */
+  operatorToken: string | undefined;
+  /** Clock. Tests inject a fake one. */
+  now?: () => Date;
 }
 
-export function createApp({ prisma }: AppDeps): Express {
+export function createApp({
+  prisma,
+  bus,
+  operatorToken,
+  now = () => new Date(),
+}: AppDeps): Express {
   const app = express();
   app.disable("x-powered-by");
   app.use(express.json({ limit: "32kb" }));
@@ -15,6 +31,11 @@ export function createApp({ prisma }: AppDeps): Express {
     res.json({ ok: true });
   });
   app.use("/api/parkings", parkingsRouter(prisma));
+  app.use("/api/slots", slotsRouter({ prisma, bus, operatorToken, now }));
+  app.use("/api/devices", devicesRouter(prisma, now));
+  app.use("/api/events", eventsRouter(prisma, operatorToken));
+  app.use("/api/ingest", ingestRouter({ prisma, bus, now }));
+  app.use("/api/pilot-requests", pilotRequestsRouter(prisma, operatorToken, now));
 
   app.use("/api", (_req, res) => {
     res.status(404).json({ error: "not_found" });
