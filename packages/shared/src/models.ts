@@ -46,3 +46,46 @@ export const Device = z.object({
   online: z.boolean(),
 });
 export type Device = z.infer<typeof Device>;
+
+export const EventType = z.enum([
+  "slot.changed",
+  "slot.overridden",
+  "gate.opened",
+  "gate.denied",
+  "device.online",
+  "device.offline",
+]);
+export type EventType = z.infer<typeof EventType>;
+
+export const EventRecord = z.object({
+  id: z.string(),
+  type: EventType,
+  parkingId: z.string().nullable(),
+  slotId: z.string().nullable(),
+  deviceId: z.string().nullable(),
+  payload: z.record(z.string(), z.unknown()),
+  createdAt: z.iso.datetime(),
+});
+export type EventRecord = z.infer<typeof EventRecord>;
+
+export const PilotRequestInput = z.strictObject({
+  name: z.string().trim().min(1).max(100),
+  organization: z.string().trim().min(1).max(200),
+  email: z.string().trim().pipe(z.email()),
+  phone: z.string().trim().max(40).optional(),
+  siteCount: z.number().int().min(1).max(10_000).optional(),
+  message: z.string().trim().max(2000).optional(),
+});
+export type PilotRequestInput = z.infer<typeof PilotRequestInput>;
+
+export const PilotRequest = PilotRequestInput.extend({
+  id: z.string(),
+  phone: z.string().nullable(),
+  siteCount: z.number().int().nullable(),
+  message: z.string().nullable(),
+  createdAt: z.iso.datetime(),
+});
+export type PilotRequest = z.infer<typeof PilotRequest>;
+
+export const SlotOverrideBody = z.strictObject({ state: SlotState });
+export type SlotOverrideBody = z.infer<typeof SlotOverrideBody>;
