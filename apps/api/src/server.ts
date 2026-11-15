@@ -16,7 +16,7 @@ const bus = createEventBus();
 const httpServer = createServer(
   createApp({ prisma, bus, operatorToken: process.env.OPERATOR_TOKEN }),
 );
-const io = attachSocketIO(httpServer, bus);
+const io = attachSocketIO(httpServer, bus, { operatorToken: process.env.OPERATOR_TOKEN });
 
 httpServer.listen(port, () => {
   console.log(`API listening on http://localhost:${port}`);
