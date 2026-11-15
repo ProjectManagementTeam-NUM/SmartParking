@@ -1,34 +1,37 @@
-import { DEVICE_HEARTBEAT_MS, DEVICE_TIMEOUT_MS, isDeviceOnline } from "@smart-parking/shared";
+import { DEVICE_HEARTBEAT_MS, DEVICE_TIMEOUT_MS } from "@smart-parking/shared";
 import type { IngestDeps } from "./ingest";
 import { recordEvent } from "./events";
 import { applySlotChanges, publish } from "./slots";
+import { withWriteLock } from "./write-lock";
 
 /**
  * Marks silent devices offline: their slots become UNKNOWN and a `device.offline` event is
- * recorded, once per outage. A device counts as announced-online while its latest
- * online/offline event is `device.online`, so slots an operator overrides during an outage
- * are left alone. Returns the ids marked offline in this pass.
+ * recorded, once per outage (only devices with `announcedOnline` are considered, and the flag
+ * is claimed atomically). Slots an operator overrides during an outage are left alone.
+ * Returns the ids marked offline in this pass.
  */
-export async function markOfflineDevices(deps: IngestDeps): Promise<string[]> {
+export function markOfflineDevices(deps: IngestDeps): Promise<string[]> {
+  return withWriteLock(() => markOfflineLocked(deps));
+}
+
+async function markOfflineLocked(deps: IngestDeps): Promise<string[]> {
   const { prisma, bus } = deps;
   const at = deps.now();
+  const cutoff = new Date(at.getTime() - DEVICE_TIMEOUT_MS);
   const silent = await prisma.device.findMany({
-    where: { lastSeenAt: { not: null, lte: new Date(at.getTime() - DEVICE_TIMEOUT_MS) } },
+    where: { announcedOnline: true, lastSeenAt: { lte: cutoff } },
     orderBy: { id: "asc" },
   });
 
   const marked: string[] = [];
   for (const device of silent) {
-    const latest = await prisma.event.findFirst({
-      where: { deviceId: device.id, type: { in: ["device.online", "device.offline"] } },
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-    });
-    if (latest?.type !== "device.online") continue;
-
     const result = await prisma.$transaction(async (tx) => {
-      // A heartbeat may have arrived since the scan.
-      const fresh = await tx.device.findUniqueOrThrow({ where: { id: device.id } });
-      if (isDeviceOnline(fresh.lastSeenAt, at)) return null;
+      // Claim the outage. Blocks on a concurrent heartbeat's row lock and re-checks after it.
+      const claimed = await tx.device.updateMany({
+        where: { id: device.id, announcedOnline: true, lastSeenAt: { lte: cutoff } },
+        data: { announcedOnline: false },
+      });
+      if (claimed.count === 0) return null;
       const slots = await tx.slot.findMany({
         where: { deviceId: device.id, state: { not: "UNKNOWN" } },
         select: { id: true },
@@ -44,7 +47,7 @@ export async function markOfflineDevices(deps: IngestDeps): Promise<string[]> {
         deviceId: device.id,
         at,
       });
-      return { slotResult, event, lastSeenAt: fresh.lastSeenAt };
+      return { slotResult, event };
     });
     if (!result) continue;
 
@@ -52,7 +55,7 @@ export async function markOfflineDevices(deps: IngestDeps): Promise<string[]> {
     bus.emit("device.updated", {
       id: device.id,
       online: false,
-      lastSeenAt: result.lastSeenAt?.toISOString() ?? null,
+      lastSeenAt: device.lastSeenAt?.toISOString() ?? null,
     });
     bus.emit("event.created", result.event);
     marked.push(device.id);

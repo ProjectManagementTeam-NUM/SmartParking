@@ -60,7 +60,13 @@ model Device {
   apiKeyHash      String
   lastSeenAt      DateTime?
   firmwareVersion String?
+  /// Bookkeeping, not the API's `online` (that is derived from lastSeenAt): true between the
+  /// recorded device.online and device.offline events. Claimed atomically by ingest and the
+  /// offline monitor so each outage is announced exactly once.
+  announcedOnline Boolean   @default(false)
   slots           Slot[]
+
+  @@index([announcedOnline, lastSeenAt])
 }
 
 model Gate {

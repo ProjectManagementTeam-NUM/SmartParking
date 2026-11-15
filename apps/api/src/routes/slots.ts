@@ -4,6 +4,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { toSlot } from "../domain/serialize";
 import { applySlotChanges, publish } from "../domain/slots";
+import { withWriteLock } from "../domain/write-lock";
 import { requireOperator } from "../http/auth";
 import { parseOr400 } from "../http/validate";
 import type { EventBus } from "../realtime/bus";
@@ -42,13 +43,15 @@ export function slotsRouter(deps: {
     const body = parseOr400(SlotOverrideBody, req.body, res);
     if (!body) return;
 
-    const result = await prisma.$transaction((tx) =>
-      applySlotChanges(tx, [{ slotId, state: body.state }], {
-        at: now(),
-        eventType: "slot.overridden",
-      }),
-    );
-    publish(bus, result);
+    await withWriteLock(async () => {
+      const result = await prisma.$transaction((tx) =>
+        applySlotChanges(tx, [{ slotId, state: body.state }], {
+          at: now(),
+          eventType: "slot.overridden",
+        }),
+      );
+      publish(bus, result);
+    });
 
     const slot = await prisma.slot.findUniqueOrThrow({ where: { id: slotId } });
     res.json(toSlot(slot));

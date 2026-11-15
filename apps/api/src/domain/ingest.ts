@@ -1,8 +1,9 @@
 import type { Device as DbDevice, PrismaClient } from "@prisma/client";
-import { DEVICE_TIMEOUT_MS, type EventRecord, type IngestBody } from "@smart-parking/shared";
+import type { EventRecord, IngestBody } from "@smart-parking/shared";
 import type { EventBus } from "../realtime/bus";
 import { recordEvent } from "./events";
 import { applySlotChanges, publish } from "./slots";
+import { withWriteLock } from "./write-lock";
 
 export interface IngestDeps {
   prisma: PrismaClient;
@@ -16,7 +17,15 @@ export type IngestResult = { ok: true } | { ok: false; message: string };
  * Handles one authenticated device POST: heartbeat, slot reports and gate decision.
  * All or nothing: if any reported slot isn't owned by the device, nothing is written.
  */
-export async function ingest(
+export function ingest(
+  deps: IngestDeps,
+  device: DbDevice,
+  body: IngestBody,
+): Promise<IngestResult> {
+  return withWriteLock(() => ingestLocked(deps, device, body));
+}
+
+async function ingestLocked(
   deps: IngestDeps,
   device: DbDevice,
   body: IngestBody,
@@ -45,19 +54,14 @@ export async function ingest(
       lastSeenAt: at,
       ...(body.firmwareVersion ? { firmwareVersion: body.firmwareVersion } : {}),
     };
-    // Conditional update makes the offline → online transition atomic: of two concurrent
-    // heartbeats, only one matches and records `device.online`.
+    // Claiming `announcedOnline` makes the offline → online transition atomic: the row lock
+    // serializes this with other heartbeats and the offline monitor, so each outage records
+    // `device.online` once.
     const cameOnline =
       (
         await tx.device.updateMany({
-          where: {
-            id: device.id,
-            OR: [
-              { lastSeenAt: null },
-              { lastSeenAt: { lte: new Date(at.getTime() - DEVICE_TIMEOUT_MS) } },
-            ],
-          },
-          data: seen,
+          where: { id: device.id, announcedOnline: false },
+          data: { ...seen, announcedOnline: true },
         })
       ).count === 1;
     if (!cameOnline) await tx.device.update({ where: { id: device.id }, data: seen });

@@ -28,7 +28,13 @@ export function attachDeviceWs(
   const parkingOf = new Map<WebSocket, string | null>();
 
   const onUpgrade = (req: IncomingMessage, socket: Duplex, head: Buffer) => {
-    const url = new URL(req.url ?? "/", "http://localhost");
+    let url: URL;
+    try {
+      url = new URL(req.url ?? "/", "http://localhost");
+    } catch {
+      socket.destroy(); // an unparseable request line must not crash the process
+      return;
+    }
     if (url.pathname !== DEVICE_WS_PATH) return;
     socket.on("error", () => socket.destroy());
 

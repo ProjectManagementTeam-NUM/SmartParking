@@ -42,7 +42,24 @@ export async function applySlotChanges(
   ctx: SlotChangeContext,
 ): Promise<SlotChangeResult> {
   const wanted = new Map(changes.map((c) => [c.slotId, c.state]));
-  const current = await tx.slot.findMany({ where: { id: { in: [...wanted.keys()] } } });
+  if (wanted.size === 0) return EMPTY_RESULT;
+
+  // Lock the affected parkings (sorted, so concurrent writers can't deadlock) before reading
+  // anything, so `freeBefore` and the after-state can't be interleaved with another writer.
+  const targets = await tx.slot.findMany({
+    where: { id: { in: [...wanted.keys()] } },
+    select: { parkingId: true },
+    distinct: ["parkingId"],
+  });
+  await lockParkings(
+    tx,
+    targets.map((t) => t.parkingId),
+  );
+
+  const current = await tx.slot.findMany({
+    where: { id: { in: [...wanted.keys()] } },
+    orderBy: { id: "asc" },
+  });
   const changed = current.filter((slot) => slot.state !== wanted.get(slot.id));
   if (changed.length === 0) return EMPTY_RESULT;
 
@@ -81,6 +98,12 @@ export async function applySlotChanges(
     .map(({ id, freeCount, status }) => ({ id, freeCount, status }));
 
   return { slots, events, parkings };
+}
+
+async function lockParkings(tx: Tx, parkingIds: string[]): Promise<void> {
+  const ids = [...new Set(parkingIds)].sort();
+  if (ids.length === 0) return;
+  await tx.$queryRaw`SELECT id FROM "Parking" WHERE id = ANY(${ids}) ORDER BY id FOR UPDATE`;
 }
 
 async function freeCounts(tx: Tx, parkingIds: string[]): Promise<Map<string, number>> {

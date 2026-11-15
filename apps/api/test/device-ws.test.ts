@@ -170,3 +170,20 @@ describe("/ws/device", () => {
     expect(wss).toBeDefined();
   });
 });
+
+describe("/ws/device hardening", () => {
+  it("survives an upgrade request with an unparseable URL", async () => {
+    const { connect } = await import("node:net");
+    const raw = connect(port, "127.0.0.1");
+    raw.on("error", () => undefined);
+    await new Promise<void>((resolve) => raw.once("connect", () => resolve()));
+    raw.write(
+      "GET http://[ HTTP/1.1\r\nHost: x\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n",
+    );
+    await new Promise<void>((resolve) => raw.once("close", () => resolve()));
+
+    // The server is still up and still serves devices.
+    const device = await connectDevice("esp32-b", TEST_KEYS["esp32-b"]);
+    expect(await device.waitFor(1)).toHaveLength(1);
+  });
+});
