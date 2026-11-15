@@ -13,7 +13,8 @@ import type { EventBus } from "./bus";
 export const DEVICE_WS_PATH = "/ws/device";
 
 /**
- * Gate transport: `/ws/device?deviceId=…&key=…`. Sends `availability` for the device's parking
+ * Gate transport: `/ws/device?deviceId=…` with the key in the `X-Device-Key` header
+ * (or, for older firmware, `&key=…`). Sends `availability` for the device's parking
  * (every parking for a device without one, i.e. the simulator) on connect and on every
  * `parking.updated`. Other upgrade paths are left to Socket.IO.
  */
@@ -33,7 +34,9 @@ export function attachDeviceWs(
 
     void (async () => {
       const deviceId = url.searchParams.get("deviceId") ?? "";
-      const key = url.searchParams.get("key") ?? undefined;
+      // Prefer the header: query strings end up in proxy and access logs.
+      const key =
+        headerValue(req.headers["x-device-key"]) ?? url.searchParams.get("key") ?? undefined;
       const device = await authenticateDevice(prisma, deviceId, key).catch(() => null);
       if (!device) {
         socket.end("HTTP/1.1 401 Unauthorized\r\nConnection: close\r\nContent-Length: 0\r\n\r\n");
@@ -91,4 +94,8 @@ export function attachDeviceWs(
   });
 
   return wss;
+}
+
+function headerValue(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
 }

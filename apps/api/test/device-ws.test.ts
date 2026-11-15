@@ -129,6 +129,18 @@ describe("/ws/device", () => {
     expect(await rejectedStatus(deviceId, key)).toBe(401);
   });
 
+  it("accepts the key in the X-Device-Key header (keeps it out of URLs and logs)", async () => {
+    const ws = new WebSocket(`ws://localhost:${port}/ws/device?deviceId=esp32-a`, {
+      headers: { "X-Device-Key": TEST_KEYS["esp32-a"] },
+    });
+    sockets.push(ws);
+    const first = await new Promise((resolve, reject) => {
+      ws.once("message", (data) => resolve(JSON.parse(String(data))));
+      ws.once("error", reject);
+    });
+    expect(first).toMatchObject({ parkingId: "A", freeCount: 4 });
+  });
+
   it("refuses a connection without credentials", async () => {
     const ws = new WebSocket(`ws://localhost:${port}/ws/device`);
     sockets.push(ws);

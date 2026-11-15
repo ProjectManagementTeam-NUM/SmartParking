@@ -44,7 +44,9 @@ Gate decision (car detected at gate, barrier kept closed):
 
 Responses: `204` ok · `400` invalid body · `401` bad key · `403` slot not owned (the whole POST is rejected, nothing is written), or a gate event from a device without a gate.
 
-## 2. API → Device: WebSocket `/ws/device?deviceId=<id>&key=<key>`
+## 2. API → Device: WebSocket `/ws/device?deviceId=<id>`
+
+Send the key in the `X-Device-Key` handshake header (preferred: query strings end up in logs). `&key=<key>` in the URL still works for older firmware.
 
 Sent on connect and on every availability change for the device's parking:
 
