@@ -1,5 +1,6 @@
 import type {
   Device as DbDevice,
+  Event as DbEvent,
   Gate as DbGate,
   Parking as DbParking,
   Slot as DbSlot,
@@ -8,6 +9,8 @@ import {
   computeAvailability,
   isDeviceOnline,
   type Device,
+  EventType,
+  type EventRecord,
   type Gate,
   type ParkingDetail,
   type ParkingSummary,
@@ -64,4 +67,20 @@ export function toDevice(device: DbDevice, now: Date): Device {
     firmwareVersion: device.firmwareVersion,
     online: isDeviceOnline(device.lastSeenAt, now),
   };
+}
+
+export function toEventRecord(row: DbEvent): EventRecord {
+  return {
+    id: row.id,
+    type: EventType.parse(row.type),
+    parkingId: row.parkingId,
+    slotId: row.slotId,
+    deviceId: row.deviceId,
+    payload: isJsonObject(row.payload) ? row.payload : {},
+    createdAt: row.createdAt.toISOString(),
+  };
+}
+
+function isJsonObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

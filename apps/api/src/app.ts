@@ -2,6 +2,7 @@ import type { PrismaClient } from "@prisma/client";
 import express, { type Express, type NextFunction, type Request, type Response } from "express";
 import type { EventBus } from "./realtime/bus";
 import { devicesRouter } from "./routes/devices";
+import { eventsRouter } from "./routes/events";
 import { parkingsRouter } from "./routes/parkings";
 import { slotsRouter } from "./routes/slots";
 
@@ -14,7 +15,7 @@ export interface AppDeps {
   now?: () => Date;
 }
 
-export function createApp({ prisma, now = () => new Date() }: AppDeps): Express {
+export function createApp({ prisma, operatorToken, now = () => new Date() }: AppDeps): Express {
   const app = express();
   app.disable("x-powered-by");
   app.use(express.json({ limit: "32kb" }));
@@ -25,6 +26,7 @@ export function createApp({ prisma, now = () => new Date() }: AppDeps): Express 
   app.use("/api/parkings", parkingsRouter(prisma));
   app.use("/api/slots", slotsRouter(prisma));
   app.use("/api/devices", devicesRouter(prisma, now));
+  app.use("/api/events", eventsRouter(prisma, operatorToken));
 
   app.use("/api", (_req, res) => {
     res.status(404).json({ error: "not_found" });
