@@ -13,7 +13,9 @@ try {
 const port = Number(process.env.PORT ?? 3000);
 const prisma = new PrismaClient();
 const bus = createEventBus();
-const httpServer = createServer(createApp({ prisma }));
+const httpServer = createServer(
+  createApp({ prisma, bus, operatorToken: process.env.OPERATOR_TOKEN }),
+);
 const io = attachSocketIO(httpServer, bus);
 
 httpServer.listen(port, () => {

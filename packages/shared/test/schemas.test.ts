@@ -73,7 +73,9 @@ describe("protocol schemas are strict", () => {
 
 describe("PilotRequestInput", () => {
   it("accepts the minimum form and trims", () => {
-    expect(PilotRequestInput.parse({ name: " Bat ", organization: "OPL", email: "a@b.mn" })).toEqual({
+    expect(
+      PilotRequestInput.parse({ name: " Bat ", organization: "OPL", email: "a@b.mn" }),
+    ).toEqual({
       name: "Bat",
       organization: "OPL",
       email: "a@b.mn",
@@ -81,9 +83,12 @@ describe("PilotRequestInput", () => {
   });
 
   it("rejects a bad email, empty name and unknown keys", () => {
-    expect(PilotRequestInput.safeParse({ name: "", organization: "O", email: "x" }).success).toBe(false);
+    expect(PilotRequestInput.safeParse({ name: "", organization: "O", email: "x" }).success).toBe(
+      false,
+    );
     expect(
-      PilotRequestInput.safeParse({ name: "a", organization: "O", email: "a@b.mn", extra: 1 }).success,
+      PilotRequestInput.safeParse({ name: "a", organization: "O", email: "a@b.mn", extra: 1 })
+        .success,
     ).toBe(false);
   });
 

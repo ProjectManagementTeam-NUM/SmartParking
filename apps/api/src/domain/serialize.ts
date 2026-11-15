@@ -1,6 +1,13 @@
-import type { Gate as DbGate, Parking as DbParking, Slot as DbSlot } from "@prisma/client";
+import type {
+  Device as DbDevice,
+  Gate as DbGate,
+  Parking as DbParking,
+  Slot as DbSlot,
+} from "@prisma/client";
 import {
   computeAvailability,
+  isDeviceOnline,
+  type Device,
   type Gate,
   type ParkingDetail,
   type ParkingSummary,
@@ -46,5 +53,15 @@ export function toParkingDetail(
     ...toParkingSummary(parking),
     slots: parking.slots.map(toSlot),
     gate: parking.gate ? toGate(parking.gate) : null,
+  };
+}
+
+export function toDevice(device: DbDevice, now: Date): Device {
+  return {
+    id: device.id,
+    parkingId: device.parkingId,
+    lastSeenAt: device.lastSeenAt?.toISOString() ?? null,
+    firmwareVersion: device.firmwareVersion,
+    online: isDeviceOnline(device.lastSeenAt, now),
   };
 }
